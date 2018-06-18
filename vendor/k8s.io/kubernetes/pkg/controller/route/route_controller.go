@@ -152,6 +152,12 @@ func (rc *RouteController) reconcile(nodes []*v1.Node, routes []*cloudprovider.R
 		if node.Spec.PodCIDR == "" {
 			continue
 		}
+
+		nodeAddr, err := nodeutil.GetNodeHostIP(node)
+		if err != nil {
+			continue
+		}
+
 		nodeName := types.NodeName(node.Name)
 		// Check if we have a route for this node w/ the correct CIDR.
 		r := routeMap[nodeName]
@@ -201,7 +207,7 @@ func (rc *RouteController) reconcile(nodes []*v1.Node, routes []*cloudprovider.R
 				rc.updateNetworkingCondition(types.NodeName(node.Name), true)
 			}
 		}
-		nodeCIDRs[nodeName] = node.Spec.PodCIDR
+		nodeCIDRs[types.NodeName(nodeAddr.String())] = node.Spec.PodCIDR
 	}
 	for _, route := range routes {
 		if rc.isResponsibleForRoute(route) {

@@ -2,9 +2,9 @@ package tencentcloud
 
 import (
 	"context"
-	"strings"
-	"fmt"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/dbdd4us/qcloudapi-sdk-go/cvm"
 
@@ -18,7 +18,12 @@ import (
 // returns the address of the calling instance. We should do a rename to
 // make this clearer.
 func (cloud *Cloud) NodeAddresses(ctx context.Context, name types.NodeName) ([]v1.NodeAddress, error) {
-	node, err := cloud.getInstanceByInstancePrivateIp(string(name))
+	ip, err := cloud.getNodeHostIP(string(name))
+	if err != nil {
+		return []v1.NodeAddress{}, err
+	}
+
+	node, err := cloud.getInstanceByInstancePrivateIp(string(ip))
 	if err != nil {
 		return []v1.NodeAddress{}, err
 	}
@@ -60,7 +65,11 @@ func (cloud *Cloud) NodeAddressesByProviderID(ctx context.Context, providerID st
 // ExternalID returns the cloud provider ID of the node with the specified NodeName.
 // Note that if the instance does not exist or is no longer running, we must return ("", cloudprovider.InstanceNotFound)
 func (cloud *Cloud) ExternalID(ctx context.Context, nodeName types.NodeName) (string, error) {
-	node, err := cloud.getInstanceByInstancePrivateIp(string(nodeName))
+	ip, err := cloud.getNodeHostIP(string(nodeName))
+	if err != nil {
+		return "", err
+	}
+	node, err := cloud.getInstanceByInstancePrivateIp(string(ip))
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +79,11 @@ func (cloud *Cloud) ExternalID(ctx context.Context, nodeName types.NodeName) (st
 
 // InstanceID returns the cloud provider ID of the node with the specified NodeName.
 func (cloud *Cloud) InstanceID(ctx context.Context, nodeName types.NodeName) (string, error) {
-	node, err := cloud.getInstanceByInstancePrivateIp(string(nodeName))
+	ip, err := cloud.getNodeHostIP(string(nodeName))
+	if err != nil {
+		return "", err
+	}
+	node, err := cloud.getInstanceByInstancePrivateIp(string(ip))
 	if err != nil {
 		return "", err
 	}

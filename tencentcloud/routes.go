@@ -5,8 +5,8 @@ import (
 
 	"github.com/dbdd4us/qcloudapi-sdk-go/ccs"
 
-	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/kubernetes/pkg/cloudprovider"
 )
 
 // ListRoutes lists all managed routes that belong to the specified clusterName
@@ -28,9 +28,13 @@ func (cloud *Cloud) ListRoutes(ctx context.Context, clusterName string) ([]*clou
 // route.Name will be ignored, although the cloud-provider may use nameHint
 // to create a more user-meaningful name.
 func (cloud *Cloud) CreateRoute(ctx context.Context, clusterName string, nameHint string, route *cloudprovider.Route) error {
-	_, err := cloud.ccs.CreateClusterRoute(&ccs.CreateClusterRouteArgs{
+	gatewayIP, err := cloud.getNodeHostIP(string(route.TargetNode))
+	if err != nil {
+		return err
+	}
+	_, err = cloud.ccs.CreateClusterRoute(&ccs.CreateClusterRouteArgs{
 		RouteTableName:       cloud.config.ClusterRouteTable,
-		GatewayIp:            string(route.TargetNode),
+		GatewayIp:            string(gatewayIP),
 		DestinationCidrBlock: route.DestinationCIDR,
 	})
 
@@ -40,9 +44,13 @@ func (cloud *Cloud) CreateRoute(ctx context.Context, clusterName string, nameHin
 // DeleteRoute deletes the specified managed route
 // Route should be as returned by ListRoutes
 func (cloud *Cloud) DeleteRoute(ctx context.Context, clusterName string, route *cloudprovider.Route) error {
-	_, err := cloud.ccs.DeleteClusterRoute(&ccs.DeleteClusterRouteArgs{
+	gatewayIP, err := cloud.getNodeHostIP(string(route.TargetNode))
+	if err != nil {
+		return err
+	}
+	_, err = cloud.ccs.DeleteClusterRoute(&ccs.DeleteClusterRouteArgs{
 		RouteTableName:       cloud.config.ClusterRouteTable,
-		GatewayIp:            string(route.TargetNode),
+		GatewayIp:            string(gatewayIP),
 		DestinationCidrBlock: route.DestinationCIDR,
 	})
 	return err
